@@ -69,5 +69,18 @@ npm install @aws-cdk/aws-dynamodb
 After cloning make sure to run the following command:
 ```
 npm install
+cd serverless-cdk
+update aws credentials
+cdk list
+cdk bootstrap aws://unknown-account/eu-west-1
+cdk deploy staging
 ```
 
+After deployment you will have the base url for your lambda output.
+
+The endpoints for your application can be visited at `/hello` `/read` and `/create`
+
+## Teardown
+```
+cdk destroy staging
+```
