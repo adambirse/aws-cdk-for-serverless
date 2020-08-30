@@ -8,13 +8,13 @@ new ServerlessCdkStack(app, 'prod',
   {
     prod: true,
     env: {
-      region: 'eu-west-1'
+      region: 'eu-west-2'
     }
   });
 new ServerlessCdkStack(app, 'staging',
   {
     prod: false,
     env: {
-      region: 'eu-west-1'
+      region: 'eu-west-2'
     }
   });

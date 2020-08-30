@@ -72,7 +72,7 @@ npm install
 cd serverless-cdk
 update aws credentials
 cdk list
-cdk bootstrap aws://unknown-account/eu-west-1
+cdk bootstrap aws://unknown-account/eu-west-2
 cdk deploy staging
 ```
 
