@@ -8,25 +8,29 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
 
 exports.handler = (event, context, callback) => {
 
-    const Item = {};
-    Item['name'] = event.queryStringParameters.name;
-    Item['location'] = event.queryStringParameters.location;
-    Item['age'] = event.queryStringParameters.age;
+    const params = {
+        ExpressionAttributeValues: {
+            ':age':  event.queryStringParameters.age
+        },
+        FilterExpression: 'age = :age',
+        TableName: TableName
+    };
 
-    dynamo.put({TableName, Item}, function (err, data) {
+    dynamo.scan(params, function(err, data) {
         if (err) {
+            console.log(err);
             callback(err, null);
         } else {
-            var response = {
+            const response = {
                 statusCode: 200,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-                    'Access-Control-Allow-Credentials': 'true'
+                    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
                 },
+                body: JSON.stringify(data.Count),
+                // body: JSON.stringify(data.Items),
                 isBase64Encoded: false
             };
-            console.log('success: returned ${data.Item}');
             callback(null, response);
         }
     });
