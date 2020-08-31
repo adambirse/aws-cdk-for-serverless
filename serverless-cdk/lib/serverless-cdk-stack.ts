@@ -6,8 +6,8 @@ import {Rule, Schedule} from '@aws-cdk/aws-events';
 
 import {LambdaFunction} from '@aws-cdk/aws-events-targets';
 
-import {LambdaBuilder} from "./lambdaBuilder";
-import {DynamoDBBuilder} from "./dynamoDBBuilder";
+import {LambdaBuilder} from "./builders/lambdaBuilder";
+import {DynamoDBBuilder} from "./builders/dynamoDBBuilder";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 // Properties defined where we determine if this is a prod stack or not
@@ -58,14 +58,11 @@ export class ServerlessCdkStack extends Stack {
         ServerlessCdkStack.integrateLambda(readLambda, api, 'read', 'GET');
         table.grantReadData(readLambda);
 
-
         const countLambda = lambdaBuilder.build(this, 'CountHandler', 'countUser.handler', concurrency, lambdaVars)
         ServerlessCdkStack.integrateLambda(countLambda, api, 'count', 'GET');
         table.grantReadData(countLambda);
 
-
         const scheduledLambda = lambdaBuilder.build(this, 'scheduledLambda', 'scheduledLambda.handler', concurrency, lambdaVars)
-
         const rule = new Rule(this, 'ScheduleRule', {
             schedule: Schedule.rate(Duration.minutes(1)),
         });
