@@ -1,12 +1,12 @@
 import * as cdk from '@aws-cdk/core';
-import * as lambda from '@aws-cdk/aws-lambda';
+import {Duration, Stack, StackProps} from '@aws-cdk/core';
 import * as apigw from '@aws-cdk/aws-apigateway';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import {Rule, Schedule} from '@aws-cdk/aws-events';
-import {Duration, Stack, StackProps} from "@aws-cdk/core";
 
 import {LambdaFunction} from '@aws-cdk/aws-events-targets';
 
+import {LambdaBuilder} from "./lambdaBuilder";
 
 // Properties defined where we determine if this is a prod stack or not
 interface EnvStackProps extends StackProps {
@@ -16,21 +16,27 @@ interface EnvStackProps extends StackProps {
 export class ServerlessCdkStack extends Stack {
     constructor(scope: cdk.Construct, id: string, props?: EnvStackProps) {
         super(scope, id, props);
+        let concurrency: number;
+        let lambdaVars: { TABLE_NAME: string };
+        let tableName: string;
+        let apiGatewayName: string;
+        let dynamoDbReadWrite: number;
 
         // Defining the prod or no prod
         if (props && props.prod) { // prod
-            var dynamoDbReadWrite = 200;
-            var apiGatewayName = 'PROD_cdk_api';
-            var tableName = 'PROD_cdk_users';
-            var lambdaVars = {'TABLE_NAME': tableName};
-            var concurrency = 100;
+            dynamoDbReadWrite = 200;
+            apiGatewayName = 'PROD_cdk_api';
+            tableName = 'PROD_cdk_users';
+            lambdaVars = {'TABLE_NAME': tableName};
+            concurrency = 100;
         } else { // not prod
-            var tableName = 'STAGING_cdk_users';
-            var apiGatewayName = 'STAGING_cdk_api';
-            var dynamoDbReadWrite = 5;
-            var lambdaVars = {'TABLE_NAME': tableName};
-            var concurrency = 5;
+            tableName = 'STAGING_cdk_users';
+            apiGatewayName = 'STAGING_cdk_api';
+            dynamoDbReadWrite = 5;
+            lambdaVars = {'TABLE_NAME': tableName};
+            concurrency = 5;
         }
+
 
         // here be code
 
@@ -46,28 +52,15 @@ export class ServerlessCdkStack extends Stack {
         // --- our first api gateway ---
         const api = new apigw.RestApi(this, apiGatewayName);
 
-        // --- greeter lambda ---
-        const welcomeLambda = new lambda.Function(this, 'HelloHandler', {
-            runtime: lambda.Runtime.NODEJS_10_X,
-            code: lambda.Code.fromAsset('lambda'),
-            environment: lambdaVars,
-            reservedConcurrentExecutions: concurrency,
-            handler: 'hello.handler'
-        });
+        const welcomeLambda = new LambdaBuilder().build(this, "HelloHandler", 'hello.handler', concurrency, lambdaVars);
 
         // greeter lambda integration
         const apiHelloInteg = new apigw.LambdaIntegration(welcomeLambda);
         const apiHello = api.root.addResource('hello');
         apiHello.addMethod('GET', apiHelloInteg);
 
-        // --- user input lambda ---
-        const createLambda = new lambda.Function(this, 'CreateHandler', {
-            runtime: lambda.Runtime.NODEJS_10_X,
-            code: lambda.Code.fromAsset('lambda'),
-            environment: lambdaVars,
-            reservedConcurrentExecutions: concurrency,
-            handler: 'createUser.handler'
-        });
+        const createLambda = new LambdaBuilder().build(this, 'CreateHandler', 'createUser.handler', concurrency, lambdaVars)
+
 
         // user input lambda integration
         const apiCreateInteg = new apigw.LambdaIntegration(createLambda);
@@ -77,14 +70,9 @@ export class ServerlessCdkStack extends Stack {
         // --- table permissions ---
         table.grantReadWriteData(createLambda);
 
-        // --- user read lambda ---
-        const readLambda = new lambda.Function(this, 'ReadHandler', {
-            runtime: lambda.Runtime.NODEJS_10_X,
-            code: lambda.Code.fromAsset('lambda'),
-            environment: lambdaVars,
-            reservedConcurrentExecutions: concurrency,
-            handler: 'readUser.handler'
-        });
+
+        const readLambda = new LambdaBuilder().build(this, 'ReadHandler', 'readUser.handler', concurrency, lambdaVars)
+
 
         // user read lambda integration
         const apiReadInteg = new apigw.LambdaIntegration(readLambda);
@@ -95,14 +83,8 @@ export class ServerlessCdkStack extends Stack {
         table.grantReadData(readLambda);
 
 
-        // --- user count lambda ---
-        const countLambda = new lambda.Function(this, 'CountHandler', {
-            runtime: lambda.Runtime.NODEJS_10_X,
-            code: lambda.Code.fromAsset('lambda'),
-            environment: lambdaVars,
-            reservedConcurrentExecutions: concurrency,
-            handler: 'countUser.handler'
-        });
+        const countLambda = new LambdaBuilder().build(this, 'CountHandler', 'countUser.handler', concurrency, lambdaVars)
+
 
         // user count lambda integration
         const apiCountInteg = new apigw.LambdaIntegration(countLambda);
@@ -112,22 +94,14 @@ export class ServerlessCdkStack extends Stack {
         // --- table permissions ---
         table.grantReadData(countLambda);
 
-        // scheduled lambda
-        const scheduledLambda = new lambda.Function(this, 'scheduledLambda', {
-            runtime: lambda.Runtime.NODEJS_10_X,
-            code: lambda.Code.fromAsset('lambda'),
-            environment: lambdaVars,
-            reservedConcurrentExecutions: concurrency,
-            handler: 'scheduledLambda.handler'
-        });
+
+        const scheduledLambda = new LambdaBuilder().build(this, 'scheduledLambda', 'scheduledLambda.handler', concurrency, lambdaVars)
 
 
         const rule = new Rule(this, 'ScheduleRule', {
-            // schedule: Schedule.cron({ minute: '1', hour: '0' }),
             schedule: Schedule.rate(Duration.minutes(1)),
         });
         rule.addTarget(new LambdaFunction(scheduledLambda));
 
     }
 }
-
