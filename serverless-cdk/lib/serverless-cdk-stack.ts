@@ -1,12 +1,14 @@
 import * as cdk from '@aws-cdk/core';
 import {Duration, Stack, StackProps} from '@aws-cdk/core';
 import * as apigw from '@aws-cdk/aws-apigateway';
+import {RestApi} from '@aws-cdk/aws-apigateway';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import {Rule, Schedule} from '@aws-cdk/aws-events';
 
 import {LambdaFunction} from '@aws-cdk/aws-events-targets';
 
 import {LambdaBuilder} from "./lambdaBuilder";
+import * as lambda from "@aws-cdk/aws-lambda";
 
 // Properties defined where we determine if this is a prod stack or not
 interface EnvStackProps extends StackProps {
@@ -38,8 +40,6 @@ export class ServerlessCdkStack extends Stack {
         }
 
 
-        // here be code
-
         // --- the dynamo db ---
         const table = new dynamodb.Table(this, 'people', {
             partitionKey: {name: 'name', type: dynamodb.AttributeType.STRING},
@@ -48,60 +48,39 @@ export class ServerlessCdkStack extends Stack {
             billingMode: dynamodb.BillingMode.PROVISIONED
         });
 
-
         // --- our first api gateway ---
         const api = new apigw.RestApi(this, apiGatewayName);
 
         const welcomeLambda = new LambdaBuilder().build(this, "HelloHandler", 'hello.handler', concurrency, lambdaVars);
-
-        // greeter lambda integration
-        const apiHelloInteg = new apigw.LambdaIntegration(welcomeLambda);
-        const apiHello = api.root.addResource('hello');
-        apiHello.addMethod('GET', apiHelloInteg);
+        ServerlessCdkStack.integrateLambda(welcomeLambda, api, 'hello', 'GET');
 
         const createLambda = new LambdaBuilder().build(this, 'CreateHandler', 'createUser.handler', concurrency, lambdaVars)
-
-
-        // user input lambda integration
-        const apiCreateInteg = new apigw.LambdaIntegration(createLambda);
-        const apiCreate = api.root.addResource('create');
-        apiCreate.addMethod('POST', apiCreateInteg);
-
-        // --- table permissions ---
+        ServerlessCdkStack.integrateLambda(createLambda, api, 'create', 'POST');
         table.grantReadWriteData(createLambda);
 
 
         const readLambda = new LambdaBuilder().build(this, 'ReadHandler', 'readUser.handler', concurrency, lambdaVars)
-
-
-        // user read lambda integration
-        const apiReadInteg = new apigw.LambdaIntegration(readLambda);
-        const apiRead = api.root.addResource('read');
-        apiRead.addMethod('GET', apiReadInteg);
-
-        // --- table permissions ---
+        ServerlessCdkStack.integrateLambda(readLambda, api, 'read', 'GET');
         table.grantReadData(readLambda);
 
 
         const countLambda = new LambdaBuilder().build(this, 'CountHandler', 'countUser.handler', concurrency, lambdaVars)
-
-
-        // user count lambda integration
-        const apiCountInteg = new apigw.LambdaIntegration(countLambda);
-        const apiCount = api.root.addResource('count');
-        apiCount.addMethod('GET', apiCountInteg);
-
-        // --- table permissions ---
+        ServerlessCdkStack.integrateLambda(countLambda, api, 'count', 'GET');
         table.grantReadData(countLambda);
 
 
         const scheduledLambda = new LambdaBuilder().build(this, 'scheduledLambda', 'scheduledLambda.handler', concurrency, lambdaVars)
-
 
         const rule = new Rule(this, 'ScheduleRule', {
             schedule: Schedule.rate(Duration.minutes(1)),
         });
         rule.addTarget(new LambdaFunction(scheduledLambda));
 
+    }
+
+    private static integrateLambda(welcomeLambda: lambda.Function, api: RestApi, path: string, verb: string) {
+        const apiHelloInteg = new apigw.LambdaIntegration(welcomeLambda);
+        const apiHello = api.root.addResource(path);
+        apiHello.addMethod(verb, apiHelloInteg);
     }
 }
