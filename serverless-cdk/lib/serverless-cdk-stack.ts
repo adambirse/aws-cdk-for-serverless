@@ -9,6 +9,7 @@ import {LambdaFunction} from '@aws-cdk/aws-events-targets';
 import {LambdaBuilder} from "./builders/lambdaBuilder";
 import {DynamoDBBuilder} from "./builders/dynamoDBBuilder";
 import * as lambda from "@aws-cdk/aws-lambda";
+import {BucketBuilder} from "./builders/bucketBuilder";
 
 // Properties defined where we determine if this is a prod stack or not
 interface EnvStackProps extends StackProps {
@@ -38,6 +39,11 @@ export class ServerlessCdkStack extends Stack {
             lambdaVars = {'TABLE_NAME': tableName};
             concurrency = 5;
         }
+
+        const bucketBuilder = new BucketBuilder();
+
+        const bucket = bucketBuilder.buildBucket(this, 'ajb-cdk-lambda-bucket', 'ajb-cdk-lambda-bucket');
+        const bucketDeployment = bucketBuilder.buildBucketDeployment(this, 'bucket-deployment', 'lambda', bucket);
 
         const lambdaBuilder = new LambdaBuilder();
 

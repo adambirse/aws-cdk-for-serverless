@@ -26,6 +26,8 @@
     "@aws-cdk/aws-events": "^1.61.1",
     "@aws-cdk/aws-events-targets": "^1.61.1",
     "@aws-cdk/aws-lambda": "^1.61.1",
+    "@aws-cdk/aws-s3": "^1.61.1",
+    "@aws-cdk/aws-s3-deployment": "^1.61.1",
     "@aws-cdk/core": "1.61.1",
     "source-map-support": "^0.5.19"
   }
