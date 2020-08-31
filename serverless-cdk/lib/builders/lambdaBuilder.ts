@@ -5,7 +5,7 @@ class LambdaBuilder {
 
     build(context: Construct, name: string, handler: string, concurrency: number, environment: { [p: string]: string }) {
         return new lambda.Function(context, name, {
-            runtime: lambda.Runtime.NODEJS_10_X,
+            runtime: lambda.Runtime.NODEJS_12_X,
             code: lambda.Code.fromAsset('lambda'),
             environment: environment,
             reservedConcurrentExecutions: concurrency,
