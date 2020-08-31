@@ -2,14 +2,18 @@ import * as cdk from '@aws-cdk/core';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as apigw from '@aws-cdk/aws-apigateway';
 import * as dynamodb from '@aws-cdk/aws-dynamodb';
+import {Rule, Schedule} from '@aws-cdk/aws-events';
+import {Duration, Stack, StackProps} from "@aws-cdk/core";
+
+import {LambdaFunction} from '@aws-cdk/aws-events-targets';
 
 
 // Properties defined where we determine if this is a prod stack or not
-interface EnvStackProps extends cdk.StackProps {
+interface EnvStackProps extends StackProps {
     prod: boolean;
 }
 
-export class ServerlessCdkStack extends cdk.Stack {
+export class ServerlessCdkStack extends Stack {
     constructor(scope: cdk.Construct, id: string, props?: EnvStackProps) {
         super(scope, id, props);
 
@@ -107,6 +111,22 @@ export class ServerlessCdkStack extends cdk.Stack {
 
         // --- table permissions ---
         table.grantReadData(countLambda);
+
+        // scheduled lambda
+        const scheduledLambda = new lambda.Function(this, 'scheduledLambda', {
+            runtime: lambda.Runtime.NODEJS_10_X,
+            code: lambda.Code.fromAsset('lambda'),
+            environment: lambdaVars,
+            reservedConcurrentExecutions: concurrency,
+            handler: 'scheduledLambda.handler'
+        });
+
+
+        const rule = new Rule(this, 'ScheduleRule', {
+            // schedule: Schedule.cron({ minute: '1', hour: '0' }),
+            schedule: Schedule.rate(Duration.minutes(1)),
+        });
+        rule.addTarget(new LambdaFunction(scheduledLambda));
 
     }
 }
