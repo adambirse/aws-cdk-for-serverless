@@ -6,7 +6,7 @@ AWS.config.update({region: region})
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
-exports.handler = (event, context, callback) => {
+exports.handler = async (event, context, callback) => {
 
     const params = {
         ExpressionAttributeValues: {
@@ -16,22 +16,21 @@ exports.handler = (event, context, callback) => {
         TableName: TableName
     };
 
-    dynamo.scan(params, function(err, data) {
-        if (err) {
-            console.log(err);
-            callback(err, null);
-        } else {
-            const response = {
-                statusCode: 200,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
-                },
-                body: JSON.stringify(data.Count),
-                // body: JSON.stringify(data.Items),
-                isBase64Encoded: false
-            };
-            callback(null, response);
-        }
-    });
+    try {
+       const data = await dynamo.scan(params).promise();
+        const response = {
+            statusCode: 200,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Methods': 'GET,POST,OPTIONS'
+            },
+            body: JSON.stringify(data.Count),
+            // body: JSON.stringify(data.Items),
+            isBase64Encoded: false
+        };
+        callback(null, response);
+    } catch (err) {
+        console.log(err);
+        callback(err, null);
+    }
 };
