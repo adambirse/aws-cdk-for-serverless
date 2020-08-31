@@ -2,12 +2,12 @@ import * as cdk from '@aws-cdk/core';
 import {Duration, Stack, StackProps} from '@aws-cdk/core';
 import * as apigw from '@aws-cdk/aws-apigateway';
 import {RestApi} from '@aws-cdk/aws-apigateway';
-import * as dynamodb from '@aws-cdk/aws-dynamodb';
 import {Rule, Schedule} from '@aws-cdk/aws-events';
 
 import {LambdaFunction} from '@aws-cdk/aws-events-targets';
 
 import {LambdaBuilder} from "./lambdaBuilder";
+import {DynamoDBBuilder} from "./dynamoDBBuilder";
 import * as lambda from "@aws-cdk/aws-lambda";
 
 // Properties defined where we determine if this is a prod stack or not
@@ -39,37 +39,32 @@ export class ServerlessCdkStack extends Stack {
             concurrency = 5;
         }
 
+        const lambdaBuilder = new LambdaBuilder();
 
-        // --- the dynamo db ---
-        const table = new dynamodb.Table(this, 'people', {
-            partitionKey: {name: 'name', type: dynamodb.AttributeType.STRING},
-            tableName: tableName,
-            readCapacity: dynamoDbReadWrite,
-            billingMode: dynamodb.BillingMode.PROVISIONED
-        });
+        const table = new DynamoDBBuilder().build(this, 'people', 'name', tableName, dynamoDbReadWrite);
 
         // --- our first api gateway ---
         const api = new apigw.RestApi(this, apiGatewayName);
 
-        const welcomeLambda = new LambdaBuilder().build(this, "HelloHandler", 'hello.handler', concurrency, lambdaVars);
+        const welcomeLambda = lambdaBuilder.build(this, "HelloHandler", 'hello.handler', concurrency, lambdaVars);
         ServerlessCdkStack.integrateLambda(welcomeLambda, api, 'hello', 'GET');
 
-        const createLambda = new LambdaBuilder().build(this, 'CreateHandler', 'createUser.handler', concurrency, lambdaVars)
+        const createLambda = lambdaBuilder.build(this, 'CreateHandler', 'createUser.handler', concurrency, lambdaVars)
         ServerlessCdkStack.integrateLambda(createLambda, api, 'create', 'POST');
         table.grantReadWriteData(createLambda);
 
 
-        const readLambda = new LambdaBuilder().build(this, 'ReadHandler', 'readUser.handler', concurrency, lambdaVars)
+        const readLambda = lambdaBuilder.build(this, 'ReadHandler', 'readUser.handler', concurrency, lambdaVars)
         ServerlessCdkStack.integrateLambda(readLambda, api, 'read', 'GET');
         table.grantReadData(readLambda);
 
 
-        const countLambda = new LambdaBuilder().build(this, 'CountHandler', 'countUser.handler', concurrency, lambdaVars)
+        const countLambda = lambdaBuilder.build(this, 'CountHandler', 'countUser.handler', concurrency, lambdaVars)
         ServerlessCdkStack.integrateLambda(countLambda, api, 'count', 'GET');
         table.grantReadData(countLambda);
 
 
-        const scheduledLambda = new LambdaBuilder().build(this, 'scheduledLambda', 'scheduledLambda.handler', concurrency, lambdaVars)
+        const scheduledLambda = lambdaBuilder.build(this, 'scheduledLambda', 'scheduledLambda.handler', concurrency, lambdaVars)
 
         const rule = new Rule(this, 'ScheduleRule', {
             schedule: Schedule.rate(Duration.minutes(1)),
