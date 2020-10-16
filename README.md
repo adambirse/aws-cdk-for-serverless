@@ -70,7 +70,7 @@ After cloning make sure to run the following command:
 ```
 npm install
 cd serverless-cdk
-update aws credentials
+update aws credentials ( ~/.aws/credentials) to contain the details of your aws account
 cdk list
 cdk bootstrap aws://unknown-account/eu-west-2
 cdk deploy staging
