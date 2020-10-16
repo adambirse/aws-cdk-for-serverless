@@ -40,10 +40,10 @@ export class ServerlessCdkStack extends Stack {
             concurrency = 5;
         }
 
-        const bucketBuilder = new BucketBuilder();
+        // const bucketBuilder = new BucketBuilder();
 
-        const bucket = bucketBuilder.buildBucket(this, 'ajb-cdk-lambda-bucket', 'ajb-cdk-lambda-bucket');
-        const bucketDeployment = bucketBuilder.buildBucketDeployment(this, 'bucket-deployment', 'lambda', bucket);
+        // const bucket = bucketBuilder.buildBucket(this, 'ajb-cdk-lambda-bucket', 'ajb-cdk-lambda-bucket');
+        // const bucketDeployment = bucketBuilder.buildBucketDeployment(this, 'bucket-deployment', 'lambda', bucket);
 
         const lambdaBuilder = new LambdaBuilder();
 
