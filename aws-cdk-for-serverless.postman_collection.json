@@ -1,0 +1,136 @@
+{
+	"info": {
+		"_postman_id": "eb4fd4ec-bb69-4725-a4af-b2fec6c14a70",
+		"name": "aws-cdk-for-serverless",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Hello",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{host}}.execute-api.{{region}}.amazonaws.com/prod/hello",
+					"protocol": "https",
+					"host": [
+						"{{host}}",
+						"execute-api",
+						"{{region}}",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"prod",
+						"hello"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create user",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "read user",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{host}}.execute-api.{{region}}.amazonaws.com/prod/read?name=adam",
+					"protocol": "https",
+					"host": [
+						"{{host}}",
+						"execute-api",
+						"{{region}}",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"prod",
+						"read"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "adam"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "count user",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://{{host}}.execute-api.{{region}}.amazonaws.com/prod/read?name=adam",
+					"protocol": "https",
+					"host": [
+						"{{host}}",
+						"execute-api",
+						"{{region}}",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"prod",
+						"read"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "adam"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "b432ecf3-5a64-491c-8a83-3d895807b847",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "7e217cfb-9be0-4669-a6cc-f3818e39b90d",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "59bb089b-ccc9-44f7-94c0-e2f12bc830bb",
+			"key": "host",
+			"value": "vtsjm494ul"
+		},
+		{
+			"id": "df699453-e8cb-4095-9e47-1d63ecb8df32",
+			"key": "region",
+			"value": "eu-west-2"
+		}
+	],
+	"protocolProfileBehavior": {}
+}
